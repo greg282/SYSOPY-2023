@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "dlfcn.h": "c",
+        "string.h": "c"
+    }
+}

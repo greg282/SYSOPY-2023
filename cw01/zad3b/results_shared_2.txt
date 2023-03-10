@@ -1,0 +1,27 @@
+make[2]: Entering directory '/home/greg/Documents/SYSOPY/Lab1/zad3b'
+make shared_2
+make[3]: Entering directory '/home/greg/Documents/SYSOPY/Lab1/zad3b'
+gcc -c -Wall -Werror -fpic ../zad1/mylibrary_stats.c
+gcc -shared  -o mylibrary_stats.so mylibrary_stats.o
+gcc -Wall  -o2 ../zad2/repl.c  -o main_shared_lib -L . mylibrary_stats.so
+make[3]: Leaving directory '/home/greg/Documents/SYSOPY/Lab1/zad3b'
+LD_LIBRARY_PATH=. ./main_shared_lib 
+Block initialized 
+Type: init. Time in seconds: Real: 0.00000800000000000000 System: 0.00000600000000000000 User: 0.00000000000000000000
+Type: count. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000100000000000000
+Type: count. Time in seconds: Real: 0.00000100000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+Type: count. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+  97  172 2292 /home/greg/Documents/SYSOPY/Lab1/zad1/mylibrary_stats.c
+
+Type: show. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+  97  141 2757 /home/greg/Documents/SYSOPY/Lab1/zad2/repl.c
+
+Type: show. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+ 108  173 3309 /home/greg/Documents/SYSOPY/Lab1/zad2/repl_dynamic.c
+
+Type: show. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+Type: delete. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+Type: delete. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+Type: delete. Time in seconds: Real: 0.00000000000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+Type: destroy. Time in seconds: Real: 0.00000100000000000000 System: 0.00000000000000000000 User: 0.00000000000000000000
+make[2]: Leaving directory '/home/greg/Documents/SYSOPY/Lab1/zad3b'

@@ -1,0 +1,13 @@
+Command wc --bytes * result:
+   29 compare_test.txt
+  333 Makefile
+25216 zad_3
+ 1111 zad3.c
+26689 total
+-------------------------
+Function result:
+File: zad3.c Size: 1111 bytes
+File: Makefile Size: 333 bytes
+File: zad_3 Size: 25216 bytes
+File: compare_test.txt Size: 147 bytes
+Total size: 26807 bytes
