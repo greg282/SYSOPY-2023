@@ -1,3 +1,0 @@
-Time for lib functions: 0.000556 seconds
-----------------------------------
-Time for sys functions: 0.018727 seconds

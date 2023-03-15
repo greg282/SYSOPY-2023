@@ -18,25 +18,25 @@ void change_ascii_lib(int argc, char *argv[]){
     char *outfilename=argv[4];
 
 
-    FILE *fp1, *fp2;
+    FILE *f1, *f2;
     char  ch;
     
-    fp1 = fopen(infilename, "rb");
-    fp2 = fopen(outfilename, "wb");
+    f1 = fopen(infilename, "rb");
+    f2 = fopen(outfilename, "wb");
     
-    if (fp1 == NULL) {
+    if (f1 == NULL) {
         printf("Error: Could not open file.");
     }
     
-    while (fread(&ch, sizeof(char), 1, fp1)) {
+    while (fread(&ch, sizeof(char), 1, f1)) {
         if (ch == asci_find) {
             ch = asci_change;
         }
-        fwrite(&ch, sizeof(char), 1, fp2);
+        fwrite(&ch, sizeof(char), 1, f2);
     }
     
-    fclose(fp1);
-    fclose(fp2);
+    fclose(f1);
+    fclose(f2);
     
     
 }
@@ -48,23 +48,23 @@ void change_ascii_sys(int argc, char *argv[]){
     char *infilename=argv[3];
     char *outfilename=argv[4];
     char ch;
-    int fd1, fd2;
-    fd1 = open(infilename, O_RDONLY);
-    fd2 = open(outfilename, O_WRONLY | O_CREAT | O_TRUNC);
+    int f1, f2;
+    f1 = open(infilename, O_RDONLY);
+    f2 = open(outfilename, O_WRONLY | O_CREAT | O_TRUNC);
     
-    if (fd1 == -1) {
+    if (f1 == -1) {
         printf("Error: Could not open file.");
     }
     
-    while (read(fd1, &ch, sizeof(char)) == sizeof(char)) {
+    while (read(f1, &ch, sizeof(char)) == sizeof(char)) {
         if (ch == asci_find) {
             ch = asci_change;
         }
-        write(fd2, &ch, sizeof(char));
+        write(f2, &ch, sizeof(char));
     }
     
-    close(fd1);
-    close(fd2);
+    close(f1);
+    close(f2);
     
 }
 

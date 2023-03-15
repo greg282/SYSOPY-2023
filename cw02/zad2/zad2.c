@@ -39,39 +39,39 @@ void reverse_1024_byte(int argc, char *argv[]){
     char *infilename=argv[1];
     char *outfilename=argv[2];
 
-    FILE *fpIn, *fpOut;
+    FILE *fIn, *fOut;
     char buffer[BUFFER_SIZE];
     long fileSize, bytesRead;
 
-    fpIn = fopen(infilename, "rb");
-    fpOut = fopen(outfilename, "wb");
+    fIn = fopen(infilename, "rb");
+    fOut = fopen(outfilename, "wb");
 
-    fseek(fpIn, 0, SEEK_END);
-    fileSize = ftell(fpIn);
-    fseek(fpIn, 0, SEEK_SET);
+    fseek(fIn, 0, SEEK_END);
+    fileSize = ftell(fIn);
+    fseek(fIn, 0, SEEK_SET);
 
     for (long i = fileSize - BUFFER_SIZE; i >= 0; i -= BUFFER_SIZE)
     {
-        fseek(fpIn, i, SEEK_SET);
-        bytesRead = fread(buffer, 1, BUFFER_SIZE, fpIn);
+        fseek(fIn, i, SEEK_SET);
+        bytesRead = fread(buffer, 1, BUFFER_SIZE, fIn);
         for (int j = bytesRead - 1; j >= 0; j--)
         {
-            fputc(buffer[j], fpOut);
+            fputc(buffer[j], fOut);
         }
     }
 
     if (fileSize % BUFFER_SIZE != 0)
     {
-        fseek(fpIn, 0, SEEK_SET);
-        bytesRead = fread(buffer, 1, fileSize % BUFFER_SIZE, fpIn);
+        fseek(fIn, 0, SEEK_SET);
+        bytesRead = fread(buffer, 1, fileSize % BUFFER_SIZE, fIn);
         for (int j = bytesRead - 1; j >= 0; j--)
         {
-            fputc(buffer[j], fpOut);
+            fputc(buffer[j], fOut);
         }
     }
 
-    fclose(fpIn);
-    fclose(fpOut);
+    fclose(fIn);
+    fclose(fOut);
 }
 
 int main(int argc, char *argv[])
