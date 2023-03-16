@@ -14,12 +14,11 @@ int main(int argc, char *argv[]) {
             printf("Parent process ID: %d, Child process ID: %d\n", getppid(), getpid());
             return 0;
         }
+        else{
+            waitpid(pid,NULL,0);
+        }
     }
 
-    int status;
-    for(int i=0;i<num_child_processes;i++){
-        wait(&status);
-    }
     printf("%s\n", argv[1]);
 
     return 0;
