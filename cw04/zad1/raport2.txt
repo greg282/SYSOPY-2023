@@ -1,0 +1,8 @@
+Typ:
+-ignore: sygnał u dziecka jest ignorowany w obydwu przypadkach
+-mask: maska blokująca działa u dziecka w obydwu przypadkach
+-handler: w przypadku funkcji fork sygnał jest odbierany u dziecka
+-pending: sygnał oczekujący w rodzicu jest widoczny w przypadku funkcji exec,
+a w przypadku funkcji fork nie jest widoczny
+
+
