@@ -1,0 +1,49 @@
+SA_SIGINFO
+Send signal from parent processs
+-------------------
+Signal: 10
+PID sending process: 22665
+Value passed in signal: 0
+Exit value or signal for process termination: 0
+Address at which fault occurred: 0x3e800005889
+-------------------
+Signal send from child process
+-------------------
+Signal: 10
+PID sending process: 22666
+Value passed in signal: 0
+Exit value or signal for process termination: 0
+Address at which fault occurred: 0x3e80000588a
+-------------------
+Sending signal with extra value
+-------------------
+Signal: 10
+PID sending process: 22665
+Value passed in signal: 2137
+Exit value or signal for process termination: 2137
+Address at which fault occurred: 0x3e800005889
+-------------------
+
+SA_RESETHAND
+First signal send
+-------------------
+Signal recieved in handler
+-------------------
+Second signal send
+User defined signal 1
+
+SA_NODEFER
+Signal send
+-------------------
+START: Signal recieved in handler
+-------------------
+START: Signal recieved in handler
+-------------------
+START: Signal recieved in handler
+END of Handler
+-------------------
+END of Handler
+-------------------
+END of Handler
+-------------------
+
