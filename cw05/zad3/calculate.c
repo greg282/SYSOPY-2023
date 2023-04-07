@@ -21,7 +21,7 @@ double riemann_sum(double a, double b, double dx)
     }
     return sum;
 }
-
+ 
 int main(int argc, char **argv)
 {
     int i = atoi(argv[1]);
