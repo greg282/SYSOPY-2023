@@ -31,12 +31,11 @@ void sigint_handler(int signo)
 void init()
 {
     atexit(clean);
-    // setting up handler for SIGINT
+
     struct sigaction act;
     act.sa_handler = sigint_handler;
     sigaction(SIGINT, &act, NULL);
 
-    // connecting to server and creating client queue
     server_key = ftok(getenv("HOME"), SERVER_CONST);
     client_key = ftok(getenv("HOME"), getpid());
     if (server_key == -1 || client_key == -1)
@@ -61,7 +60,6 @@ void init()
     }
     printf("Client is running\n");
 
-    // sending init messeage to server
     struct MsgBuf request;
     request.mtype = INIT;
     request.mtext.idFrom = qidClient;
