@@ -1,91 +1,78 @@
-#include <sys/msg.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <time.h>
-#include <signal.h>
-#define INIT 8
-#define LIST 1
-#define _2ONE 2
-#define _2ALL 3
+#include "com.h"
+int qidServer, qidClient;
+key_t server_key, client_key;
+int client_id_server = -1;
 
-int qidServer,qidClient;
-key_t server_key,client_key;
-int client_id_server=-1;
-#define MAX_MESSAGE_LEN 512
-struct Mtext
-{
-    int idTo;
-    int idFrom;
-    int client_id;
-    char msg[MAX_MESSAGE_LEN];
-};
-
-struct MsgBuf
-{
-    long mtype;
-    struct Mtext mtext;
-};
- const size_t MSG_BUF_SIZE = sizeof(struct MsgBuf) - sizeof(long);
 
 void clean()
 {
     msgctl(qidClient, IPC_RMID, NULL);
 }
+void stop_handler()
+{
+    struct MsgBuf request;
+    request.mtype = STOP;
+    request.mtext.idFrom = qidClient;
+    request.mtext.client_id = client_id_server;
+    snprintf(request.mtext.msg, MAX_MESSAGE_LEN, "%s", "STOP");
+    if (msgsnd(qidServer, &request, MSG_BUF_SIZE, 0) == -1)
+    {
+        perror("msgsnd");
+        exit(EXIT_FAILURE);
+    }
+    exit(0);
+}
 
-void sigint_handler(int signo){
+void sigint_handler(int signo)
+{
     stop_handler();
-    //TODO: send message to server then terminate
 }
 
-void stop_handler(){
-    //send message to server  to delete client form queue an quit
-}
-
-
-
-void init(){
-       atexit(clean);
-    //setting up handler for SIGINT
+void init()
+{
+    atexit(clean);
+    // setting up handler for SIGINT
     struct sigaction act;
     act.sa_handler = sigint_handler;
     sigaction(SIGINT, &act, NULL);
 
-    //connecting to server and creating client queue
-    server_key=ftok(getenv("HOME"),'s');
-    client_key=ftok(getenv("HOME"),getpid());   
-    if(server_key==-1 || client_key==-1){
+    // connecting to server and creating client queue
+    server_key = ftok(getenv("HOME"), SERVER_CONST);
+    client_key = ftok(getenv("HOME"), getpid());
+    if (server_key == -1 || client_key == -1)
+    {
         perror("ftok");
         exit(EXIT_FAILURE);
     }
 
-    qidServer=msgget(server_key,0);
-    if(qidServer==-1){
+    qidServer = msgget(server_key, 0);
+    if (qidServer == -1)
+    {
         perror("Server is not running");
         exit(EXIT_FAILURE);
     }
 
-    printf("%d\n",qidServer);
-    qidClient=msgget(client_key,IPC_CREAT|0600);
-    if(qidClient==-1){
+    printf("%d\n", qidServer);
+    qidClient = msgget(client_key, IPC_CREAT | 0600);
+    if (qidClient == -1)
+    {
         perror("msgget");
         exit(EXIT_FAILURE);
     }
     printf("Client is running\n");
 
-    //sending init messeage to server
+    // sending init messeage to server
     struct MsgBuf request;
-    request.mtype=INIT;
-    request.mtext.idFrom=qidClient;
-    request.mtext.client_id=0;
-    snprintf(request.mtext.msg,MAX_MESSAGE_LEN,"init");
-    if(msgsnd(qidServer,&request,MSG_BUF_SIZE,0)==-1){
+    request.mtype = INIT;
+    request.mtext.idFrom = qidClient;
+    request.mtext.client_id = 0;
+    snprintf(request.mtext.msg, MAX_MESSAGE_LEN, "init");
+    if (msgsnd(qidServer, &request, MSG_BUF_SIZE, 0) == -1)
+    {
         perror("msgsnd");
         exit(EXIT_FAILURE);
     }
-    
+
     struct MsgBuf response;
     if (msgrcv(qidClient, &response, MSG_BUF_SIZE, INIT, 0) == -1)
     {
@@ -101,94 +88,113 @@ void init(){
     printf("Client ID on server is: %d\n", client_id_server);
 }
 
-void sender(){
- 
+void sender()
+{
+
     char input[MAX_MESSAGE_LEN];
-    while(1){
-        fgets(input,MAX_MESSAGE_LEN,stdin);
-        if(strncmp(input,"LIST",4)==0){
+    while (1)
+    {
+        fgets(input, MAX_MESSAGE_LEN, stdin);
+        if (strncmp(input, "LIST", 4) == 0)
+        {
             struct MsgBuf request;
-            request.mtype=LIST;
-            request.mtext.idFrom=qidClient;
-            request.mtext.client_id=client_id_server;
-            snprintf(request.mtext.msg,MAX_MESSAGE_LEN,"%s",input);
-            if(msgsnd(qidServer,&request,MSG_BUF_SIZE,0)==-1){
+            request.mtype = LIST;
+            request.mtext.idFrom = qidClient;
+            request.mtext.client_id = client_id_server;
+            snprintf(request.mtext.msg, MAX_MESSAGE_LEN, "%s", input);
+            if (msgsnd(qidServer, &request, MSG_BUF_SIZE, 0) == -1)
+            {
                 perror("msgsnd");
                 exit(EXIT_FAILURE);
             }
         }
-        else if(strncmp(input,"2ONE",4)==0){
+        else if (strncmp(input, "2ONE", 4) == 0)
+        {
             struct MsgBuf request;
-            request.mtype=_2ONE;
-            request.mtext.idFrom=qidClient;
+            request.mtype = _2ONE;
+            request.mtext.idFrom = qidClient;
 
-            sscanf(input,"%*s %d %[^\n]",&request.mtext.idTo,request.mtext.msg);
-            request.mtext.client_id=client_id_server;
-            if(msgsnd(qidServer,&request,MSG_BUF_SIZE,0)==-1){
+            sscanf(input, "%*s %d %[^\n]", &request.mtext.idTo, request.mtext.msg);
+            request.mtext.client_id = client_id_server;
+            if (msgsnd(qidServer, &request, MSG_BUF_SIZE, 0) == -1)
+            {
                 perror("msgsnd");
                 exit(EXIT_FAILURE);
             }
         }
-        else if(strncmp(input,"2ALL",4)==0){
+        else if (strncmp(input, "2ALL", 4) == 0)
+        {
             struct MsgBuf request;
-            request.mtype=_2ALL;
+            request.mtype = _2ALL;
 
-            sscanf(input,"%*s %[^\n]",request.mtext.msg);
-            request.mtext.idFrom=qidClient;
-            request.mtext.client_id=client_id_server;
-            if(msgsnd(qidServer,&request,MSG_BUF_SIZE,0)==-1){
+            sscanf(input, "%*s %[^\n]", request.mtext.msg);
+            request.mtext.idFrom = qidClient;
+            request.mtext.client_id = client_id_server;
+            if (msgsnd(qidServer, &request, MSG_BUF_SIZE, 0) == -1)
+            {
                 perror("msgsnd");
                 exit(EXIT_FAILURE);
             }
-
-
         }
-        
+        else if (strncmp(input, "STOP", 4) == 0)
+        {
+
+            stop_handler();
+        }
+        else
+        {
+            printf("Wrong command\n");
+        }
     }
-
-    
-    
-    
-    
 }
 
-void catcher(){
+void catcher()
+{
     struct MsgBuf response;
-    while(1){
-        if(msgrcv(qidClient,&response,MSG_BUF_SIZE,0,0)==-1){
-            perror("msgrcv");
+    while (1)
+    {
+        if (msgrcv(qidClient, &response, MSG_BUF_SIZE, 0, 0) == -1)
+        {
+            printf("Program has been stopped\n");
             exit(EXIT_FAILURE);
         }
-        else{
+        else
+        {
             switch (response.mtype)
             {
             case LIST:
-                printf("\nClients online: \n%s",response.mtext.msg);
+                printf("\nClients online: \n%s", response.mtext.msg);
                 break;
             case _2ONE:
-                printf("Received message from clientid %d:\n%s\n",response.mtext.idFrom,response.mtext.msg);
-            break;
+                printf("Received message from clientid %d:\n%s\n", response.mtext.idFrom, response.mtext.msg);
+                break;
             case _2ALL:
-                printf("Received message from clientid %d:\n%s\n",response.mtext.idFrom,response.mtext.msg);
-            break;
+                printf("Received message from clientid %d:\n%s\n", response.mtext.idFrom, response.mtext.msg);
+                break;
+            case STOP:
+                printf("Server is closing\n");
+                kill(getppid(), SIGINT);
+                exit(0);
+                break;
             default:
                 break;
             }
         }
     }
-
 }
 
-int main(int argc,char **argv){
-    setbuf(stdout, NULL); 
-   init();
+int main(int argc, char **argv)
+{
+    setbuf(stdout, NULL);
+    init();
 
-
-   if(fork()==0){
-       catcher();
-   }
-   else{
-       sender();
-   }
+    if (fork() == 0)
+    {
+        catcher();
+    }
+    else
+    {
+        sender();
+    }
     return 0;
 }
