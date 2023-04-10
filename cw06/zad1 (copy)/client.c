@@ -65,8 +65,7 @@ void init()
         perror("mq_open");
         exit(EXIT_FAILURE);
     }
-    printf("%d\n", qidServer);
-    printf("%d\n", qidClient);
+
     printf("Client is running\n");
 
     struct MsgBuf request;
@@ -165,8 +164,7 @@ void catcher()
         }
         else
         {
-            //print qidClient
-            printf("qidClient: %d\n", qidClient);
+      
             switch (response.mtype)
             {
             case LIST:

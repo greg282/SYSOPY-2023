@@ -124,9 +124,7 @@ void init_handler(struct MsgBuf received)
 
 
         printf("Client %d connected,generated ID: %d\n", received.mtext.idFrom, idClient);
-        //print qidServer
-        printf("qidServer: %d\n",qidServer);
-
+    
         struct MsgBuf response;
         response.mtype = INIT;
         response.mtext.idFrom = qidServer;
@@ -145,7 +143,6 @@ void init_handler(struct MsgBuf received)
 
 void list_handler(struct MsgBuf received)
 {   
-            printf("qidServer: %d\n",qidServer);
 
     char msg[MAX_MESSAGE_LEN] = "";
     for (int i = 0; i < MAX_CLIENTS; i++)
@@ -181,8 +178,7 @@ void to_one_handler(struct MsgBuf received)
         printf("Client %d is not registered\n", received.mtext.client_id);
         return;
     }
-    //print qidclients[received.mtext.idTo]
-    printf("qidClients[received.mtext.idTo]: %d\n",qidClients[received.mtext.idTo]);
+
     struct MsgBuf response;
     response.mtype = _2ONE;
     response.mtext.idFrom = received.mtext.client_id;
