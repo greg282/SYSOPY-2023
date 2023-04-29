@@ -3,10 +3,8 @@
 #include <time.h>
 #include <ncurses.h>
 
-
 const int grid_width = SIZE;
 const int grid_height = SIZE;
-
 
 char *create_grid()
 {
@@ -99,7 +97,6 @@ void update_grid(char *src, char *dst)
     }
 }
 
-
 struct thread_data
 {
     char *src;
@@ -111,29 +108,28 @@ struct thread_data
 void *thread_func(void *arg)
 {
     struct thread_data *data = (struct thread_data *)arg;
-    int row = data->row;
-    int col = data->col;
-    char *src = data->src;
-    char *dst = data->dst;
+   
 
     while (1)
     {
-        dst[row * grid_width+ col] = is_alive(row, col, src);
+        data->dst[data->row * grid_width + data->col] = is_alive(data->row, data->col, data->src);
         pause();
         char *tmp = data->src;
-		data->src = data->dst;
-		data->dst = tmp;
+        data->src = data->dst;
+        data->dst = tmp;
     }
-    
-
     pthread_exit(NULL);
 }
 
-void ignore_handler(int signo, siginfo_t* info, void* context) {}
+void ignore_handler(int signo, siginfo_t *info, void *context) {
+   
 
-void update_grid_multithread(char *src, char *dst, int num_threads){
-    pthread_t threads[num_threads];
-    struct thread_data thread_data_array[grid_height][grid_width];
+
+}
+
+void update_grid_multithread(char *src, char *dst, int num_threads)
+{   
+    static pthread_t *threads = NULL;
     int thread_count = 0;
 
     struct sigaction action;
@@ -141,21 +137,27 @@ void update_grid_multithread(char *src, char *dst, int num_threads){
     action.sa_sigaction = ignore_handler;
     sigaction(SIGUSR1, &action, NULL);
 
-    for (int i = 0; i < grid_height; ++i)
+    if (!threads)
     {
-        for (int j = 0; j < grid_width; ++j)
-        {
-            thread_data_array[i][j].src = src;
-            thread_data_array[i][j].dst = dst;
-            thread_data_array[i][j].row = i;
-            thread_data_array[i][j].col = j;
+        threads = malloc(sizeof(pthread_t) * num_threads);
 
-            pthread_create(&threads[thread_count], NULL, thread_func, &thread_data_array[i][j]);
-            thread_count++;
+        
+        for (int i = 0; i < grid_height; ++i)
+        {
+            for (int j = 0; j < grid_width; ++j)
+            {
+                struct thread_data* thread_data_= malloc(sizeof(struct thread_data));
+                thread_data_->src = src;
+                thread_data_->dst = dst;
+                thread_data_->row = i;
+                thread_data_->col = j;
+                
+                pthread_create(threads+thread_count, NULL, thread_func,(void*) thread_data_);
+                thread_count++;
+            }
         }
     }
-
-    for (int i = 0; i < thread_count; ++i)
+    for (int i = 0; i < num_threads; i++)
     {
         pthread_kill(threads[i], SIGUSR1);
     }
