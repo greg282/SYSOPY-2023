@@ -28,6 +28,8 @@ pthread_cond_t elves_cond = PTHREAD_COND_INITIALIZER;
 
 int reindeers_returned = 0;
 
+int elves_queue[MAX_ELVES_Q];
+int elves_waiting = 0;
 struct thread_data{
     int id;
 };
@@ -46,9 +48,28 @@ void *santa_function(void *arg){
         pthread_cond_wait(&santa_cond, &santa_mutex);
         printf("Komunikat: Mikołaj: budzę się\n");
 
+        //lock mutex elves
+        pthread_mutex_lock(&elves_mutex);
+        if(elves_waiting==MAX_ELVES_Q){
+            printf("Komunikat: Mikołaj: rozwiazuje problemy elfów z ID: %d, %d, %d\n", elves_queue[0], elves_queue[1], elves_queue[2]);
+            printf("Komunikat: Elf: Mikołaj rozwiązuje problem, ID_Elfa: %d\n", elves_queue[0]);
+            printf("Komunikat: Elf: Mikołaj rozwiązuje problem, ID_Elfa: %d\n", elves_queue[1]);
+            printf("Komunikat: Elf: Mikołaj rozwiązuje problem, ID_Elfa: %d\n", elves_queue[2]);
+            //sleep for rand 1-2 sec
+            int sleep_time = rand() % 2 + 1;
+            sleep(sleep_time);
+            //reset elves queue
+            elves_waiting = 0;
+            for(int i = 0; i < MAX_ELVES_Q; i++){
+                elves_queue[i] = 0;
+            }
+            pthread_cond_broadcast(&elves_cond);
+        }
+        //unlock mutex elves
+        pthread_mutex_unlock(&elves_mutex);
+
         // lock mutex reindeer
         pthread_mutex_lock(&reindeer_mutex);
-        printf("Reinderss_returned: %d\n", reindeers_returned);
         if(reindeers_returned == REINDERS){
             printf("Komunikat: Mikołaj: dostarczam zabawki\n");
             //sleep for rand 2-4 sec
@@ -56,7 +77,8 @@ void *santa_function(void *arg){
             sleep(sleep_time);
             deliveries++;
             reindeers_returned = 0;
-       
+            pthread_cond_broadcast(&reindeer_cond);
+
         }
         //unlock mutex reinderr
         pthread_mutex_unlock(&reindeer_mutex);
@@ -69,13 +91,61 @@ void *santa_function(void *arg){
             exit(0);
         }
 
-        pthread_cond_broadcast(&reindeer_cond);
 
     }    
 }
 
 void *elves_function(void *arg){
     int id = *((int*)arg);  
+    while (1)
+    {
+        ///sleep for rand 2-5sec
+        int sleep_time = rand() % 4 + 2;
+        printf("Komunikat: Elf : Pracuje przez %ds, ID_Elfa: %d\n", sleep_time, id);
+
+        sleep(sleep_time);
+
+
+        //lock mutex
+        pthread_mutex_lock(&elves_mutex);
+        while (elves_waiting==MAX_ELVES_Q)
+        {
+            printf("Komunikat: Elf: czeka na powrót elfów, ID_Elfa: %d\n", id);
+            pthread_cond_wait(&elves_cond, &elves_mutex);
+        }
+        //unlock mutex
+        pthread_mutex_unlock(&elves_mutex);
+        
+
+        //lock mutex
+        pthread_mutex_lock(&elves_mutex);
+        if(elves_waiting+1<MAX_ELVES_Q){
+            elves_waiting++;
+            elves_queue[elves_waiting] = id;
+            printf("Komunikat: Elf: czeka %d elfów na Mikołaja, ID_Elfa: %d\n", elves_waiting, id);
+            pthread_cond_wait(&elves_cond, &elves_mutex);
+
+        }
+        else if (elves_waiting+1 == MAX_ELVES_Q)
+        {
+            elves_waiting++;
+            //signal santa
+            printf("Komunikat: Elf: wybudzam Mikołaja, ID_Elfa: %d\n", id);
+            pthread_cond_broadcast(&santa_cond);
+            pthread_cond_wait(&elves_cond, &elves_mutex);
+
+        }
+        else{
+            printf("Komunikat: Elf: samodzielnie rozwiązuje swój problem, ID_Elfa: %d\n", id);
+           // pthread_cond_wait(&elves_cond, &elves_mutex);
+
+        }
+        //unlock mutex
+        pthread_mutex_unlock(&elves_mutex);
+
+        
+    }
+    
 
 }
 
@@ -85,7 +155,7 @@ void *reindeer_function(void *arg){
     {
     //sleep for rand 5-10 sec
     int sleep_time = rand() % 6 + 5;
-    printf("Komunikat: Renifer: Jestem na wakacjach przez %ds, ID_Renifera: %d\n",sleep_time,id);
+    //printf("Komunikat: Renifer: Jestem na wakacjach przez %ds, ID_Renifera: %d\n",sleep_time,id);
     sleep(sleep_time);
 
     //lock mutex
@@ -119,7 +189,7 @@ int main(){
     //create santa thread
 
     pthread_create(&santa, NULL, &santa_function, NULL);
-    /*
+    
     //create elves threads
     for(int i = 0; i < ELVES; i++){
     
@@ -128,7 +198,7 @@ int main(){
         td->id = i+1;
         pthread_create(&elves[i], NULL, &elves_function, &td->id);
     }
-*/
+
     //create reindeer threads
     for(int i = 0; i < REINDERS; i++){
         struct thread_data *td = malloc(sizeof(struct thread_data));
@@ -138,10 +208,10 @@ int main(){
 
     //run threads cleanup
     pthread_join(santa, NULL);
-    /*
+    
     for(int i = 0; i < ELVES; i++){
         pthread_join(elves[i], NULL);
-    }*/
+    }
     for(int i = 0; i < REINDERS; i++){
         pthread_join(reindeer[i], NULL);
     }
