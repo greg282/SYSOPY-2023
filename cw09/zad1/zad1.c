@@ -160,27 +160,22 @@ void *reindeer_function(void *arg){
 
 
 int main(){
-    //create santa thread
 
     pthread_create(&santa, NULL, &santa_function, NULL);
     
-    //create elves threads
     for(int i = 0; i < ELVES; i++){
     
-        //create thread data and pass it to thread
         struct thread_data *td = malloc(sizeof(struct thread_data));
         td->id = i+1;
         pthread_create(&elves[i], NULL, &elves_function, &td->id);
     }
 
-    //create reindeer threads
     for(int i = 0; i < REINDERS; i++){
         struct thread_data *td = malloc(sizeof(struct thread_data));
         td->id = i+1;
         pthread_create(&reindeer[i], NULL, &reindeer_function, &td->id);
     }
 
-    //run threads cleanup
     pthread_join(santa, NULL);
     
     for(int i = 0; i < ELVES; i++){
@@ -189,7 +184,6 @@ int main(){
     for(int i = 0; i < REINDERS; i++){
         pthread_join(reindeer[i], NULL);
     }
-    //destroy
     pthread_mutex_destroy(&santa_mutex);
     pthread_mutex_destroy(&reindeer_mutex);
     pthread_mutex_destroy(&elves_mutex);
