@@ -1,5 +1,5 @@
 # AGH-WIET-INF-SysOpy-2023
-Systemy operacyjne
+Operating Systems
 
 ## Ćwiczenia
 1. [Zarządzanie pamięcią, biblioteki, pomiar czasu](https://github.com/greg282/SYSOPY-2023/tree/main/cw01)
