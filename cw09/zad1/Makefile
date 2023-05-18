@@ -6,5 +6,4 @@ all:
 
 output:
 	$(CC) $(CFLAGS) zad1.c -o zad1
-	$(CC) $(CFLAGS) proman.c -o pro
 

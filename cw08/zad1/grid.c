@@ -5,7 +5,7 @@
 
 const int grid_width = SIZE;
 const int grid_height = SIZE;
-
+static pthread_t *threads = NULL;
 char *create_grid()
 {
     return malloc(sizeof(char) * grid_width * grid_height);
@@ -121,7 +121,7 @@ void *thread_func(void *arg)
     pthread_exit(NULL);
 }
 
-void ignore_handler(int signo, siginfo_t *info, void *context) {
+void handler(int signo, siginfo_t *info, void *context) {
    
 
 
@@ -129,12 +129,12 @@ void ignore_handler(int signo, siginfo_t *info, void *context) {
 
 void update_grid_multithread(char *src, char *dst, int num_threads)
 {   
-    static pthread_t *threads = NULL;
+    
     int thread_count = 0;
 
     struct sigaction action;
     sigemptyset(&action.sa_mask);
-    action.sa_sigaction = ignore_handler;
+    action.sa_sigaction = handler;
     sigaction(SIGUSR1, &action, NULL);
 
     if (!threads)
