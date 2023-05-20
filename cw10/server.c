@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <signal.h>
+#include <pthread.h>
 #define MAX_EVENTS 10
 #define MAX_CLIENTS 10
 #include "com.h"
@@ -20,8 +21,11 @@ int num_clients = 0;
 int tcp_port, unix_socket;
 int tcp_sock, unix_sock;
 
+int id_generator = 0;
 
 
+//mutex
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 struct Client{
     int client_socket;
     int client_id;
@@ -56,6 +60,58 @@ void rm_socket(){
     unlink(unix_addr.sun_path);
 }
 
+//CREATE THREAD FUNCTION
+void *thread_function(void *arg){         
+    while (1)
+    {
+        sleep(10);
+        //lock 
+        pthread_mutex_lock(&mutex);
+        //check if clients are still connected
+            //epoll wait
+            //create epoll
+            int epoll_fd = epoll_create1(0);
+            struct epoll_event event;
+            event.events = EPOLLIN|EPOLLEXCLUSIVE;
+            event.data.fd = tcp_sock;
+            
+            if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, tcp_sock, &event) == -1) {
+                perror("epoll_ctl");
+                exit(EXIT_FAILURE);
+            }
+            event.events = EPOLLIN|EPOLLEXCLUSIVE;
+            event.data.fd = unix_socket;
+            if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, unix_socket, &event) == -1) {
+                perror("epoll_ctl");
+                exit(EXIT_FAILURE);
+            }
+            //write ping to all clients
+            struct Message ping;
+            ping.command_type = PING;
+            for (int i = 0; i < num_clients; i++) {
+                if (write(client_sockets[i].client_socket, &ping, sizeof(struct Message)) == -1) {
+                    perror("write");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            struct epoll_event events[MAX_EVENTS];
+            int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, 0);
+            if (nfds == -1) {
+                perror("epoll_wait");
+                exit(EXIT_FAILURE);
+            }
+            //read ping from clients if not readed close connection
+           
+        //delete epoll
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, tcp_sock, NULL);
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, unix_socket, NULL);
+        //unlock
+        pthread_mutex_unlock(&mutex);
+
+        
+    }
+    
+}
 
 
 int main(int argc, char *argv[]) {
@@ -141,6 +197,10 @@ int main(int argc, char *argv[]) {
     act.sa_flags = 0;
     sigaction(SIGINT, &act, NULL);
 
+    //create thread
+    pthread_t thread;
+     pthread_create(&thread, NULL, thread_function, NULL);
+
     while (1) {
         //clear buf
         memset(buf, 0, sizeof(buf));
@@ -149,8 +209,11 @@ int main(int argc, char *argv[]) {
             perror("epoll_wait");
             exit(EXIT_FAILURE);
         }
+        //lock
+        pthread_mutex_lock(&mutex);
 
         for (i = 0; i < nfds; i++) {
+
             if (events[i].data.fd == unix_socket || events[i].data.fd == tcp_sock) {
                 int client_sock = accept(events[i].data.fd, NULL, NULL);
                 if (client_sock == -1) {
@@ -177,10 +240,11 @@ int main(int argc, char *argv[]) {
                 }
 
                 client_sockets[num_clients++].client_socket = client_sock;
-                client_sockets[num_clients-1].client_id=num_clients-1;
+                //client_sockets[num_clients-1].client_id=num_clients-1;
+                client_sockets[num_clients-1].client_id=id_generator++;
                 strcpy(client_sockets[num_clients-1].name, request.username);
                 struct Message response_id;
-                response_id.client_id = num_clients-1;
+                response_id.client_id = id_generator-1;
                 if (write(client_sock, &response_id, sizeof(struct Message)) == -1) {
                     perror("write");
                     exit(EXIT_FAILURE);
@@ -211,7 +275,10 @@ int main(int argc, char *argv[]) {
                 } else { 
                     struct Message received;
                     memcpy(&received, buf, sizeof(struct Message));
+                    if(received.command_type != PING){
                     printf("Received message: %s\n", received.msg);
+
+                    }
 
                     switch (received.command_type)
                     {
@@ -266,6 +333,15 @@ int main(int argc, char *argv[]) {
                             }
                         }
                         break;
+                    case PING:
+                    //find client
+                        for (int j = 0; j < num_clients; j++) {
+                            if (client_sockets[j].client_id == received.client_id) {
+                        printf("Client id: %d, name: %s is still connected\n", received.client_id, client_sockets[j].name);
+                                break;
+                            }
+                        }
+                        break;
                     default:
                         break;
                     }
@@ -273,7 +349,10 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
+        //unlock
+        pthread_mutex_unlock(&mutex);
     }
+
 
     return 0;
 }

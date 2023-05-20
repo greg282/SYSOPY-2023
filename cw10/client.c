@@ -43,14 +43,29 @@ void catcher(){
             kill(getppid(), SIGINT);
             exit(EXIT_SUCCESS);
             break;
+        case PING:
+            //write ping
+            response.command_type = PING;
+            response.client_id = my_id;
+            if (write(sock, &response, sizeof(struct Message)) == -1) {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+            break;
         default:
             break;
         }
     }
     
 }
+//FUNCTIOIN FOR ATEXIT
+void exit_handler(){
+    shutdown(sock, SHUT_RDWR);
+    close(sock);
+}
 
 int main(int argc, char *argv[]) {
+    atexit(exit_handler);
     char name[MAX_NAME_LEN];
     int is_network;
     char *server_addr;
@@ -154,7 +169,6 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
 
     char input[MAX_MESSAGE_LEN];
-    char msg[MAX_MESSAGE_LEN];
     while (1) {
         memset(&request, 0, sizeof(struct Message));
         fgets(input, MAX_MESSAGE_LEN, stdin);
