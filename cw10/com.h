@@ -6,6 +6,7 @@
 #define _2ONE 3
 #define _2ALL 4
 #define STOP 1
+#define PING 6
 #define MAX_MESSAGE_LEN 512
 #define MAX_CLIENTS 10
 #define SERVER_CONST 2137
